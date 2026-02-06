@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, useMemo } from "react";
+import { Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import {
   ChefHat,
@@ -22,7 +22,8 @@ import {
   getEditableProps,
 } from "@/lib/contentstack";
 import type { HomePage, Recipe, Category } from "@/lib/contentstack";
-import { useUserCuisinePreference, type CuisinePreference } from "@/lib/personalization";
+import { useUserCuisinePreference, type CuisinePreference, setStoredPreference } from "@/lib/personalization";
+import { trackRegionSelection, trackCuisinePreference } from "@/lib/lytics";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, LucideIcon> = {
@@ -39,10 +40,33 @@ const iconMap: Record<string, LucideIcon> = {
 
 // Region display info - matches Personalize variant short IDs
 const regionInfo = {
-  ind: { flag: "🇮🇳", name: "India", color: "from-orange-500 to-green-500" },
-  usa: { flag: "🇺🇸", name: "America", color: "from-blue-500 to-red-500" },
-  default: { flag: "🌍", name: "Global", color: "from-amber-500 to-orange-500" },
+  ind: { 
+    flag: "🇮🇳", 
+    name: "India", 
+    color: "from-orange-500 to-green-500",
+    cuisinePreference: "indian" as CuisinePreference,
+    categoryKeywords: ["indian", "india"],
+    recipeKeywords: ["indian", "curry", "biryani", "masala", "paneer", "dosa", "naan", "tikka", "tandoori"],
+  },
+  usa: { 
+    flag: "🇺🇸", 
+    name: "America", 
+    color: "from-blue-500 to-red-500",
+    cuisinePreference: "american" as CuisinePreference,
+    categoryKeywords: ["american", "america", "usa"],
+    recipeKeywords: ["american", "burger", "bbq", "mac", "cheese", "pie", "steak", "hot dog", "pulled pork"],
+  },
+  default: { 
+    flag: "🌍", 
+    name: "Global", 
+    color: "from-amber-500 to-orange-500",
+    cuisinePreference: "default" as CuisinePreference,
+    categoryKeywords: [],
+    recipeKeywords: [],
+  },
 };
+
+type RegionKey = keyof typeof regionInfo;
 
 // Banner styling config (gradients and overlays for different cuisines)
 // Images now come from Contentstack variants
@@ -95,10 +119,32 @@ function HomeContentInner({
 }: HomeContentProps) {
   // Use live preview hook for real-time updates
   const livePreviewHomePage = useLivePreviewUpdate(initialHomePage, fetchHomePage);
-  const [currentRegion, setCurrentRegion] = useState(detectedRegion);
+  const [currentRegion, setCurrentRegion] = useState<RegionKey>(detectedRegion);
   
   // Click-based cuisine preference
-  const { preference: cuisinePreference, trackClick, clickHistory, resetPreference } = useUserCuisinePreference();
+  const { preference: cuisinePreference, resetPreference } = useUserCuisinePreference();
+  
+  // Get current region info
+  const currentRegionInfo = regionInfo[currentRegion];
+
+  // Handle region change - updates everything: banner, text, recipes
+  const handleRegionChange = useCallback((region: RegionKey) => {
+    setCurrentRegion(region);
+    
+    // Track in Lytics
+    trackRegionSelection(region, "region_switcher");
+    
+    // Update cuisine preference for click-based personalization
+    const cuisinePref = regionInfo[region].cuisinePreference;
+    if (cuisinePref !== "default") {
+      trackCuisinePreference(cuisinePref as "indian" | "american", "region_switcher");
+      setStoredPreference(cuisinePref as "indian" | "american");
+    } else {
+      resetPreference();
+    }
+    
+    console.log(`🌍 Region changed to: ${region}`, regionInfo[region]);
+  }, [resetPreference]);
 
   // Determine which home page to display based on region
   const displayedHomePage = useMemo(() => {
@@ -106,7 +152,7 @@ function HomeContentInner({
     if (homePageVariants && currentRegion !== "default") {
       const variant = homePageVariants[currentRegion];
       if (variant) {
-        console.log("Using variant for region:", currentRegion, variant.hero?.badgeText);
+        console.log("📄 Using home page variant for region:", currentRegion, variant.hero?.badgeText);
         return variant;
       }
     }
@@ -114,47 +160,91 @@ function HomeContentInner({
     return livePreviewHomePage || initialHomePage;
   }, [currentRegion, homePageVariants, livePreviewHomePage, initialHomePage]);
   
-  // Determine banner styling based on:
-  // 1. Contentstack variant content (if available)
-  // 2. Click-based cuisine preference
-  // 3. Default
-  const determineBannerStyle = useMemo(() => {
-    // Check if the displayed home page content indicates a region
-    const badgeText = displayedHomePage?.hero?.badgeText?.toLowerCase() || "";
-    const headline = displayedHomePage?.hero?.headline?.toLowerCase() || "";
-    
-    // Detect region from content
-    if (badgeText.includes("🇮🇳") || badgeText.includes("namaste") || headline.includes("indian")) {
-      return bannerStyleConfig.indian;
-    }
-    if (badgeText.includes("🇺🇸") || badgeText.includes("hey there") || headline.includes("american")) {
-      return bannerStyleConfig.american;
-    }
-    
-    // Fall back to click-based preference
-    return bannerStyleConfig[cuisinePreference];
-  }, [displayedHomePage?.hero?.badgeText, displayedHomePage?.hero?.headline, cuisinePreference]);
+  // Determine banner styling based on current region
+  const bannerStyle = useMemo(() => {
+    return bannerStyleConfig[currentRegionInfo.cuisinePreference];
+  }, [currentRegionInfo.cuisinePreference]);
   
   // Get the banner image from Contentstack (from displayed home page) or fallback to style config
-  const bannerImage = displayedHomePage?.hero?.bannerImage || determineBannerStyle.fallbackImage;
+  const bannerImage = displayedHomePage?.hero?.bannerImage || bannerStyle.fallbackImage;
+
+  // Filter recipes based on selected region
+  const filteredRecipes = useMemo(() => {
+    if (currentRegion === "default") {
+      // Show all recipes for global/default
+      return initialRecipes;
+    }
+    
+    const regionData = regionInfo[currentRegion];
+    const categoryKeywords = regionData.categoryKeywords;
+    const recipeKeywords = regionData.recipeKeywords;
+    
+    // Filter recipes by category or tags/title matching region
+    const filtered = initialRecipes.filter((recipe) => {
+      // Check category
+      const categoryLower = (recipe.category || "").toLowerCase();
+      if (categoryKeywords.some(kw => categoryLower.includes(kw))) {
+        return true;
+      }
+      
+      // Check recipe title
+      const titleLower = recipe.title.toLowerCase();
+      if (recipeKeywords.some(kw => titleLower.includes(kw))) {
+        return true;
+      }
+      
+      // Check tags
+      const tags = recipe.tags || [];
+      if (tags.some(tag => recipeKeywords.some(kw => tag.toLowerCase().includes(kw)))) {
+        return true;
+      }
+      
+      return false;
+    });
+    
+    console.log(`🍽️ Filtered recipes for ${currentRegion}:`, filtered.length, "of", initialRecipes.length);
+    return filtered;
+  }, [currentRegion, initialRecipes]);
+
+  // Sort by created_at and get latest 6 (from filtered recipes)
+  const latestRecipes = useMemo(() => {
+    return [...filteredRecipes]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 6);
+  }, [filteredRecipes]);
   
-  // Use the determined banner style for gradients
-  const bannerStyle = determineBannerStyle;
+  // Filter categories based on selected region
+  const filteredCategories = useMemo(() => {
+    if (currentRegion === "default") {
+      return initialCategories;
+    }
+    
+    const regionData = regionInfo[currentRegion];
+    const categoryKeywords = regionData.categoryKeywords;
+    
+    // For regional view, prioritize regional category but show others too
+    const regionalCategories = initialCategories.filter((cat) => {
+      const nameLower = cat.name.toLowerCase();
+      return categoryKeywords.some(kw => nameLower.includes(kw));
+    });
+    
+    // If we have regional categories, show them first, then others
+    if (regionalCategories.length > 0) {
+      const otherCategories = initialCategories.filter(cat => !regionalCategories.includes(cat));
+      return [...regionalCategories, ...otherCategories];
+    }
+    
+    return initialCategories;
+  }, [currentRegion, initialCategories]);
 
-  const recipes = initialRecipes;
-  const categories = initialCategories;
+  const categories = filteredCategories;
 
-  // Sort by created_at and get latest 6
-  const latestRecipes = recipes
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 6);
-
-  // Map categories for display
+  // Map categories for display - show recipe counts based on filtered recipes
   const displayCategories = categories.length > 0
     ? categories.map((cat) => ({
         name: cat.name,
         emoji: cat.emoji || "🍽️",
-        count: recipes.filter((r) => r.category === cat.name).length,
+        count: filteredRecipes.filter((r) => r.category === cat.name).length,
       }))
     : [];
 
@@ -167,7 +257,7 @@ function HomeContentInner({
     primaryButton: { label: "Explore Recipes", url: "/recipes" },
     secondaryButton: { label: "Start Cooking", url: "/signup" },
     stats: [
-      { value: `${recipes.length}+`, label: "Recipes" },
+      { value: `${filteredRecipes.length}+`, label: "Recipes" },
       { value: "100+", label: "Home Cooks" },
       { value: "500+", label: "Saves" },
     ],
@@ -201,49 +291,55 @@ function HomeContentInner({
     secondaryButton: { label: "Browse Recipes", url: "/recipes" },
   };
 
-  // Update stats with dynamic recipe count
+  // Update stats with dynamic recipe count based on filtered recipes
   const stats = hero.stats.length > 0 ? hero.stats.map((stat, idx) => {
     if (idx === 0 && stat.label.toLowerCase().includes("recipe")) {
-      return { ...stat, value: `${recipes.length}+` };
+      return { ...stat, value: `${latestRecipes.length}+` };
     }
     return stat;
   }) : [
-    { value: `${recipes.length}+`, label: "Recipes" },
+    { value: `${latestRecipes.length}+`, label: "Recipes" },
     { value: "100+", label: "Home Cooks" },
     { value: "500+", label: "Saves" },
   ];
-
-  const currentRegionInfo = regionInfo[currentRegion];
 
   return (
     <div className="flex flex-col">
       {/* Live Preview Indicator */}
       <LivePreviewIndicator />
 
-      {/* Region Switcher (for demo/testing) */}
-      {homePageVariants && (
-        <div className="fixed bottom-4 left-4 z-50 flex flex-col gap-2 rounded-2xl bg-white/90 p-3 shadow-xl backdrop-blur dark:bg-stone-900/90">
-          <div className="flex items-center gap-2 text-xs font-medium text-stone-500">
-            <Globe className="h-3.5 w-3.5" />
-            <span>Region: {currentRegionInfo.flag} {currentRegionInfo.name}</span>
-          </div>
-          <div className="flex gap-1">
-            {(Object.keys(regionInfo) as Array<keyof typeof regionInfo>).map((region) => (
-              <button
-                key={region}
-                onClick={() => setCurrentRegion(region)}
-                className={`rounded-lg px-2 py-1 text-xs font-medium transition-all ${
-                  currentRegion === region
-                    ? `bg-gradient-to-r ${regionInfo[region].color} text-white`
-                    : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400"
-                }`}
-              >
-                {regionInfo[region].flag}
-              </button>
-            ))}
+      {/* Region Switcher - Controls banner, text, and recipes */}
+      <div className="fixed bottom-4 left-4 z-50 flex flex-col gap-2 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur-sm border border-stone-200 dark:bg-stone-900/95 dark:border-stone-700">
+        <div className="flex items-center gap-2 text-xs font-medium text-stone-600 dark:text-stone-400">
+          <Globe className="h-4 w-4" />
+          <span>Region</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{currentRegionInfo.flag}</span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-stone-900 dark:text-stone-100">{currentRegionInfo.name}</span>
+            <span className="text-xs text-stone-500">
+              {latestRecipes.length} recipes
+            </span>
           </div>
         </div>
-      )}
+        <div className="flex gap-1.5 mt-1">
+          {(Object.keys(regionInfo) as RegionKey[]).map((region) => (
+            <button
+              key={region}
+              onClick={() => handleRegionChange(region)}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all ${
+                currentRegion === region
+                  ? `bg-gradient-to-r ${regionInfo[region].color} text-white shadow-md`
+                  : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+              }`}
+              title={`Switch to ${regionInfo[region].name} content`}
+            >
+              {regionInfo[region].flag} {regionInfo[region].name}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Hero Section with Personalized Banner */}
       <section 
@@ -259,19 +355,13 @@ function HomeContentInner({
         <div className={`absolute inset-0 ${bannerStyle.overlay}`} />
         <div className="absolute inset-0 pattern-dots opacity-30" />
         
-        {/* Cuisine Preference Indicator */}
-        {cuisinePreference !== "default" && (
+        {/* Current Region Badge */}
+        {currentRegion !== "default" && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
-            <span className="text-2xl">{bannerStyle.pattern}</span>
-            <span className="text-sm font-medium text-white capitalize">
-              {cuisinePreference === "indian" ? "Indian Cuisine" : "American Cuisine"} Mode
+            <span className="text-2xl">{currentRegionInfo.flag}</span>
+            <span className="text-sm font-medium text-white">
+              {currentRegionInfo.name} Edition
             </span>
-            <button
-              onClick={resetPreference}
-              className="ml-2 text-xs text-white/70 hover:text-white underline"
-            >
-              Reset
-            </button>
           </div>
         )}
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
@@ -430,16 +520,27 @@ function HomeContentInner({
               <RecipeGrid recipes={latestRecipes} />
             ) : (
               <div className="rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50 p-16 text-center dark:border-stone-800 dark:bg-stone-900">
-                <ChefHat className="mx-auto h-12 w-12 text-stone-300" />
+                <span className="text-6xl mb-4 block">{currentRegionInfo.flag}</span>
                 <h3 className="mt-4 font-semibold text-stone-900 dark:text-stone-100">
-                  No recipes yet
+                  {currentRegion === "default" 
+                    ? "No recipes yet" 
+                    : `No ${currentRegionInfo.name} recipes yet`}
                 </h3>
                 <p className="mt-1 text-stone-500">
-                  Be the first to share a delicious recipe!
+                  {currentRegion === "default"
+                    ? "Be the first to share a delicious recipe!"
+                    : `Try switching to Global to see all recipes, or add some ${currentRegionInfo.name} recipes!`}
                 </p>
-                <Link href="/recipes/new" className="mt-6 inline-block">
-                  <Button>Share Your Recipe</Button>
-                </Link>
+                <div className="mt-6 flex items-center justify-center gap-3">
+                  {currentRegion !== "default" && (
+                    <Button variant="outline" onClick={() => handleRegionChange("default")}>
+                      View All Recipes
+                    </Button>
+                  )}
+                  <Link href="/recipes/new">
+                    <Button>Share Your Recipe</Button>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
