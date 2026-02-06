@@ -464,11 +464,13 @@ const HOME_PAGE_ENTRY_UID = "bltd30052da58732341";
 // Get Home Page variant based on region (uses Entry Variants API with x-cs-variant-uid header)
 export async function getHomePageForRegion(region: "ind" | "usa" | "default"): Promise<HomePage | null> {
   if (region === "default") {
+    console.log("[Variants] Fetching default home page");
     return getHomePage();
   }
 
   const variantUid = VARIANT_UIDS[region];
   if (!variantUid) {
+    console.log("[Variants] No variant UID for region:", region);
     return getHomePage();
   }
 
@@ -477,21 +479,31 @@ export async function getHomePageForRegion(region: "ind" | "usa" | "default"): P
     const DELIVERY_TOKEN = process.env.NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN || "";
     const ENVIRONMENT = process.env.NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT || "development";
     
+    // Debug: Log environment config (without sensitive data)
+    console.log(`[Variants] Fetching ${region} variant (${variantUid}) from ${ENVIRONMENT} environment`);
+    console.log(`[Variants] API Key present: ${!!API_KEY}, Token present: ${!!DELIVERY_TOKEN}`);
+    
+    if (!API_KEY || !DELIVERY_TOKEN) {
+      console.error("[Variants] Missing API credentials - falling back to default");
+      return getHomePage();
+    }
+    
+    const url = `https://cdn.contentstack.io/v3/content_types/home_page/entries/${HOME_PAGE_ENTRY_UID}?environment=${ENVIRONMENT}`;
+    console.log(`[Variants] Fetching: ${url}`);
+    
     // Fetch the specific entry with the variant header
-    const response = await fetch(
-      `https://cdn.contentstack.io/v3/content_types/home_page/entries/${HOME_PAGE_ENTRY_UID}?environment=${ENVIRONMENT}`,
-      {
-        headers: {
-          "api_key": API_KEY,
-          "access_token": DELIVERY_TOKEN,
-          "x-cs-variant-uid": variantUid,
-        },
-        cache: "no-store",
-      }
-    );
+    const response = await fetch(url, {
+      headers: {
+        "api_key": API_KEY,
+        "access_token": DELIVERY_TOKEN,
+        "x-cs-variant-uid": variantUid,
+      },
+      cache: "no-store",
+    });
     
     if (!response.ok) {
-      console.error("Failed to fetch variant:", response.status);
+      const errorText = await response.text();
+      console.error(`[Variants] Failed to fetch variant (${response.status}):`, errorText);
       return getHomePage();
     }
     
@@ -499,14 +511,14 @@ export async function getHomePageForRegion(region: "ind" | "usa" | "default"): P
     const entry = data.entry;
     
     if (!entry) {
-      console.error("No entry in response for variant:", region);
+      console.error("[Variants] No entry in response for variant:", region);
       return getHomePage();
     }
     
-    console.log(`✓ Fetched ${region} variant:`, entry.hero_badge_text);
+    console.log(`[Variants] ✓ Fetched ${region} variant - Badge: "${entry.hero_badge_text}", Headline: "${entry.hero_headline}"`);
     return transformHomePage(entry as unknown as HomePageEntry);
   } catch (error) {
-    console.error("Error fetching home page variant:", error);
+    console.error("[Variants] Error fetching home page variant:", error);
     return getHomePage();
   }
 }
@@ -517,11 +529,27 @@ export async function getAllHomePageVariants(): Promise<{
   ind: HomePage | null;
   usa: HomePage | null;
 }> {
+  console.log("[Variants] Fetching all home page variants...");
+  
   const [defaultPage, indPage, usaPage] = await Promise.all([
     getHomePage(),
     getHomePageForRegion("ind"),
     getHomePageForRegion("usa"),
   ]);
+  
+  // Log what we got
+  console.log("[Variants] Results:", {
+    default: defaultPage?.hero?.badgeText || "null",
+    ind: indPage?.hero?.badgeText || "null",
+    usa: usaPage?.hero?.badgeText || "null",
+  });
+  
+  // Check if variants are actually different
+  const allSame = defaultPage?.hero?.badgeText === indPage?.hero?.badgeText && 
+                  defaultPage?.hero?.badgeText === usaPage?.hero?.badgeText;
+  if (allSame) {
+    console.warn("[Variants] ⚠ All variants have the same content - variants may not be set up correctly in Contentstack");
+  }
   
   return {
     default: defaultPage,

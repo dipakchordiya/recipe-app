@@ -339,6 +339,18 @@ function HomeContentInner({
             </button>
           ))}
         </div>
+        {/* Debug info - shows variant status (temporarily enabled for debugging on Launch) */}
+        <div className="mt-2 pt-2 border-t border-stone-200 dark:border-stone-700 text-xs text-stone-500">
+          <div>Badge: {displayedHomePage?.hero?.badgeText || "none"}</div>
+          <div>Variants: {homePageVariants ? "✓" : "✗"}</div>
+          {homePageVariants && (
+            <div className="text-[10px] mt-1 space-y-0.5">
+              <div>• def: {homePageVariants.default?.hero?.badgeText?.slice(0,15) || "null"}</div>
+              <div>• ind: {homePageVariants.ind?.hero?.badgeText?.slice(0,15) || "null"}</div>
+              <div>• usa: {homePageVariants.usa?.hero?.badgeText?.slice(0,15) || "null"}</div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Hero Section with Personalized Banner */}
