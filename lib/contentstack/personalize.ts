@@ -5,25 +5,29 @@ import Personalize from "@contentstack/personalize-edge-sdk";
 
 // Environment variables for Personalize
 const PERSONALIZE_PROJECT_UID = process.env.NEXT_PUBLIC_PERSONALIZE_PROJECT_UID || "";
-const PERSONALIZE_EDGE_API_URL = process.env.NEXT_PUBLIC_PERSONALIZE_EDGE_API_URL || "https://personalize-edge.contentstack.com";
 
 // Initialize Personalize SDK
 let personalizeInstance: typeof Personalize | null = null;
+let isInitialized = false;
 
 export async function initPersonalize(): Promise<typeof Personalize | null> {
   if (typeof window === "undefined") return null;
   
-  if (personalizeInstance) {
+  if (isInitialized && personalizeInstance) {
     return personalizeInstance;
   }
 
+  if (!PERSONALIZE_PROJECT_UID) {
+    console.warn("Personalize project UID not configured");
+    return null;
+  }
+
   try {
-    await Personalize.init({
-      projectUid: PERSONALIZE_PROJECT_UID,
-      edgeApiUrl: PERSONALIZE_EDGE_API_URL,
-    });
+    // The SDK expects just the project UID as a string
+    await Personalize.init(PERSONALIZE_PROJECT_UID);
     
     personalizeInstance = Personalize;
+    isInitialized = true;
     console.log("✓ Contentstack Personalize initialized");
     return Personalize;
   } catch (error) {
@@ -69,7 +73,8 @@ export async function getExperienceVariant(experienceShortId: string): Promise<s
   if (!personalize) return null;
   
   try {
-    const variant = await personalize.getVariant(experienceShortId);
+    const variants = await personalize.getVariants();
+    const variant = variants[experienceShortId] || null;
     console.log(`✓ Variant for ${experienceShortId}:`, variant);
     return variant;
   } catch (error) {

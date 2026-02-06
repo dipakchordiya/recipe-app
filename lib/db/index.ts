@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { v4 as uuidv4 } from "crypto";
 
 // Database file paths
 const DB_DIR = path.join(process.cwd(), "data");
