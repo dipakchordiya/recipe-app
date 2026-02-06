@@ -44,27 +44,28 @@ const regionInfo = {
   default: { flag: "🌍", name: "Global", color: "from-amber-500 to-orange-500" },
 };
 
-// Banner images for click-based personalization
-const bannerConfig: Record<CuisinePreference, {
-  image: string;
+// Banner styling config (gradients and overlays for different cuisines)
+// Images now come from Contentstack variants
+const bannerStyleConfig: Record<CuisinePreference, {
+  fallbackImage: string;
   gradient: string;
   overlay: string;
   pattern: string;
 }> = {
   indian: {
-    image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1920&q=80", // Indian food spread
+    fallbackImage: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1920&q=80",
     gradient: "from-orange-900/90 via-red-900/70 to-amber-900/80",
     overlay: "bg-gradient-to-r from-orange-500/20 to-red-500/20",
     pattern: "🍛",
   },
   american: {
-    image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=1920&q=80", // Burger
+    fallbackImage: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=1920&q=80",
     gradient: "from-blue-900/90 via-slate-900/70 to-red-900/80",
     overlay: "bg-gradient-to-r from-blue-500/20 to-red-500/20",
     pattern: "🍔",
   },
   default: {
-    image: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1920&q=80", // General cooking
+    fallbackImage: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1920&q=80",
     gradient: "from-stone-900/90 via-amber-900/70 to-orange-900/80",
     overlay: "bg-gradient-to-r from-amber-500/20 to-orange-500/20",
     pattern: "🍽️",
@@ -98,9 +99,6 @@ function HomeContentInner({
   
   // Click-based cuisine preference
   const { preference: cuisinePreference, trackClick, clickHistory, resetPreference } = useUserCuisinePreference();
-  
-  // Get banner config based on cuisine preference
-  const currentBanner = bannerConfig[cuisinePreference];
 
   // Determine which home page to display based on region
   const displayedHomePage = useMemo(() => {
@@ -115,6 +113,33 @@ function HomeContentInner({
     // Otherwise use the live preview or initial home page
     return livePreviewHomePage || initialHomePage;
   }, [currentRegion, homePageVariants, livePreviewHomePage, initialHomePage]);
+  
+  // Determine banner styling based on:
+  // 1. Contentstack variant content (if available)
+  // 2. Click-based cuisine preference
+  // 3. Default
+  const determineBannerStyle = useMemo(() => {
+    // Check if the displayed home page content indicates a region
+    const badgeText = displayedHomePage?.hero?.badgeText?.toLowerCase() || "";
+    const headline = displayedHomePage?.hero?.headline?.toLowerCase() || "";
+    
+    // Detect region from content
+    if (badgeText.includes("🇮🇳") || badgeText.includes("namaste") || headline.includes("indian")) {
+      return bannerStyleConfig.indian;
+    }
+    if (badgeText.includes("🇺🇸") || badgeText.includes("hey there") || headline.includes("american")) {
+      return bannerStyleConfig.american;
+    }
+    
+    // Fall back to click-based preference
+    return bannerStyleConfig[cuisinePreference];
+  }, [displayedHomePage?.hero?.badgeText, displayedHomePage?.hero?.headline, cuisinePreference]);
+  
+  // Get the banner image from Contentstack (from displayed home page) or fallback to style config
+  const bannerImage = displayedHomePage?.hero?.bannerImage || determineBannerStyle.fallbackImage;
+  
+  // Use the determined banner style for gradients
+  const bannerStyle = determineBannerStyle;
 
   const recipes = initialRecipes;
   const categories = initialCategories;
@@ -224,20 +249,20 @@ function HomeContentInner({
       <section 
         className="relative overflow-hidden min-h-[70vh] flex items-center"
         style={{
-          backgroundImage: `url(${currentBanner.image})`,
+          backgroundImage: `url(${bannerImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       >
         {/* Dynamic gradient overlay based on cuisine preference */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${currentBanner.gradient}`} />
-        <div className={`absolute inset-0 ${currentBanner.overlay}`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${bannerStyle.gradient}`} />
+        <div className={`absolute inset-0 ${bannerStyle.overlay}`} />
         <div className="absolute inset-0 pattern-dots opacity-30" />
         
         {/* Cuisine Preference Indicator */}
         {cuisinePreference !== "default" && (
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
-            <span className="text-2xl">{currentBanner.pattern}</span>
+            <span className="text-2xl">{bannerStyle.pattern}</span>
             <span className="text-sm font-medium text-white capitalize">
               {cuisinePreference === "indian" ? "Indian Cuisine" : "American Cuisine"} Mode
             </span>

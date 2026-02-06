@@ -118,6 +118,7 @@ export interface HomePageEntry extends ContentstackEntry {
   page_title: string;
   seo_meta_title?: string;
   seo_meta_description?: string;
+  hero_banner_image?: ContentstackAsset;
   hero_badge_text?: string;
   hero_headline: string;
   hero_highlight_text?: string;
@@ -206,6 +207,7 @@ export interface HomePage {
     description: string;
   };
   hero: {
+    bannerImage: string | null;
     badgeText: string;
     headline: string;
     highlightText: string;

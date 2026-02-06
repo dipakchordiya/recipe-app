@@ -381,6 +381,7 @@ function transformHomePage(entry: HomePageEntry): HomePage {
       description: entry.seo_meta_description || "",
     },
     hero: {
+      bannerImage: entry.hero_banner_image?.url || null,
       badgeText: entry.hero_badge_text || "",
       headline: entry.hero_headline,
       highlightText: entry.hero_highlight_text || "",
