@@ -413,14 +413,25 @@ function HomeContentInner({
         }}
       >
         {/* Dynamic gradient overlay based on cuisine preference */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${bannerStyle.gradient}`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${bannerStyle.gradient} animate-gradient`} />
         <div className={`absolute inset-0 ${bannerStyle.overlay}`} />
         <div className="absolute inset-0 pattern-dots opacity-30" />
         
+        {/* Floating decorative elements */}
+        <div className="absolute top-20 left-10 text-6xl opacity-20 animate-float-slow pointer-events-none hidden lg:block">
+          🍳
+        </div>
+        <div className="absolute bottom-32 right-16 text-5xl opacity-20 animate-float pointer-events-none hidden lg:block" style={{ animationDelay: '1s' }}>
+          🥗
+        </div>
+        <div className="absolute top-1/3 right-1/4 text-4xl opacity-15 animate-float-slow pointer-events-none hidden xl:block" style={{ animationDelay: '2s' }}>
+          🍰
+        </div>
+        
         {/* Current Region Badge */}
         {currentRegion !== "default" && (
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
-            <span className="text-2xl">{currentRegionInfo.flag}</span>
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm animate-slide-up">
+            <span className="text-2xl animate-bounce-subtle">{currentRegionInfo.flag}</span>
             <span className="text-sm font-medium text-white">
               {currentRegionInfo.name} Edition
             </span>
@@ -431,21 +442,22 @@ function HomeContentInner({
             {hero.badgeText && (
               <Badge 
                 variant="default" 
-                className="mb-6 gap-2"
+                className="mb-6 gap-2 animate-slide-up animate-pulse-glow"
                 {...getEditableProps("home_page", "bltd30052da58732341", "hero_badge_text")}
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkles className="h-3.5 w-3.5 animate-spin-slow" />
                 {hero.badgeText}
               </Badge>
             )}
             <h1 
-              className="text-4xl font-bold tracking-tight text-white sm:text-6xl drop-shadow-lg"
+              className="text-4xl font-bold tracking-tight text-white sm:text-6xl drop-shadow-lg animate-slide-up opacity-0 delay-100"
+              style={{ animationFillMode: 'forwards' }}
               {...getEditableProps("home_page", "bltd30052da58732341", "hero_headline")}
             >
               {hero.headline}{" "}
               {hero.highlightText && (
                 <span 
-                  className="text-amber-300"
+                  className="text-gradient-animated"
                   {...getEditableProps("home_page", "bltd30052da58732341", "hero_highlight_text")}
                 >
                   {hero.highlightText}
@@ -454,16 +466,17 @@ function HomeContentInner({
             </h1>
             {hero.description && (
               <p 
-                className="mt-6 text-lg leading-8 text-white/90 drop-shadow-md"
+                className="mt-6 text-lg leading-8 text-white/90 drop-shadow-md animate-slide-up opacity-0 delay-200"
+                style={{ animationFillMode: 'forwards' }}
                 {...getEditableProps("home_page", "bltd30052da58732341", "hero_description")}
               >
                 {hero.description}
               </p>
             )}
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row animate-slide-up opacity-0 delay-300" style={{ animationFillMode: 'forwards' }}>
               {hero.primaryButton && (
                 <Link href={hero.primaryButton.url}>
-                  <Button size="lg" className="gap-2">
+                  <Button size="lg" className="gap-2 glow-hover transition-transform hover:scale-105">
                     <Search className="h-5 w-5" />
                     {hero.primaryButton.label}
                   </Button>
@@ -471,21 +484,25 @@ function HomeContentInner({
               )}
               {hero.secondaryButton && (
                 <Link href={hero.secondaryButton.url}>
-                  <Button variant="outline" size="lg" className="gap-2">
+                  <Button variant="outline" size="lg" className="gap-2 transition-transform hover:scale-105 hover:bg-white/10">
                     {hero.secondaryButton.label}
-                    <ArrowRight className="h-5 w-5" />
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
               )}
             </div>
 
-            {/* Stats */}
+            {/* Stats with counter animation */}
             {stats.length > 0 && (
-              <div className="mt-16 grid grid-cols-3 gap-8 border-t border-stone-200 pt-10 dark:border-stone-800">
+              <div className="mt-16 grid grid-cols-3 gap-8 border-t border-white/20 pt-10 animate-slide-up opacity-0 delay-400" style={{ animationFillMode: 'forwards' }}>
                 {stats.map((stat, idx) => (
-                  <div key={idx}>
-                    <p className="text-3xl font-bold text-amber-500">{stat.value}</p>
-                    <p className="mt-1 text-sm text-stone-500">{stat.label}</p>
+                  <div 
+                    key={idx} 
+                    className="text-center transform hover:scale-110 transition-transform duration-300"
+                    style={{ animationDelay: `${500 + idx * 100}ms` }}
+                  >
+                    <p className="text-3xl font-bold text-amber-400 counter-animate drop-shadow-lg">{stat.value}</p>
+                    <p className="mt-1 text-sm text-white/70">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -496,7 +513,7 @@ function HomeContentInner({
 
       {/* Categories Section */}
       {displayCategories.length > 0 && (
-        <section className="border-y-2 border-stone-100 bg-white py-16 dark:border-stone-800 dark:bg-stone-900">
+        <section className="border-y-2 border-stone-100 bg-white py-16 dark:border-stone-800 dark:bg-stone-900 overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <div>
@@ -516,22 +533,23 @@ function HomeContentInner({
                 )}
               </div>
               <Link href="/categories">
-                <Button variant="ghost" className="gap-2">
+                <Button variant="ghost" className="gap-2 underline-animate">
                   View All
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
             </div>
 
             <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {displayCategories.slice(0, 6).map((category) => (
+              {displayCategories.slice(0, 6).map((category, idx) => (
                 <Link
                   key={category.name}
                   href={`/recipes?category=${category.name}`}
-                  className="group flex flex-col items-center rounded-2xl border-2 border-stone-100 bg-stone-50 p-6 transition-all hover:border-amber-200 hover:bg-amber-50 dark:border-stone-800 dark:bg-stone-800 dark:hover:border-amber-700 dark:hover:bg-amber-900/20"
+                  className="group flex flex-col items-center rounded-2xl border-2 border-stone-100 bg-stone-50 p-6 transition-all hover:border-amber-200 hover:bg-amber-50 dark:border-stone-800 dark:bg-stone-800 dark:hover:border-amber-700 dark:hover:bg-amber-900/20 hover-lift animate-scale-in opacity-0"
+                  style={{ animationDelay: `${idx * 100}ms`, animationFillMode: 'forwards' }}
                 >
-                  <span className="text-4xl">{category.emoji}</span>
-                  <span className="mt-3 font-semibold text-stone-900 dark:text-stone-100">
+                  <span className="text-4xl transition-transform duration-300 group-hover:scale-125 group-hover-wiggle">{category.emoji}</span>
+                  <span className="mt-3 font-semibold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 transition-colors">
                     {category.name}
                   </span>
                   <span className="mt-1 text-xs text-stone-400">
@@ -545,12 +563,12 @@ function HomeContentInner({
       )}
 
       {/* Featured Recipes */}
-      <section className="py-20">
+      <section className="py-20 overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30">
-                <TrendingUp className="h-5 w-5 text-amber-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-900/30 animate-pulse-glow">
+                <TrendingUp className="h-5 w-5 text-amber-600 animate-bounce-subtle" />
               </div>
               <div>
                 <h2 
@@ -611,7 +629,7 @@ function HomeContentInner({
 
       {/* Features Section */}
       {featuresSection.features.length > 0 && (
-        <section className="bg-stone-50 py-20 dark:bg-stone-900/50">
+        <section className="bg-stone-50 py-20 dark:bg-stone-900/50 overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 
@@ -636,12 +654,13 @@ function HomeContentInner({
                 return (
                   <div
                     key={idx}
-                    className="rounded-2xl border-2 border-stone-100 bg-white p-6 transition-all hover:border-amber-200 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900 dark:hover:border-amber-700"
+                    className="group rounded-2xl border-2 border-stone-100 bg-white p-6 transition-all hover:border-amber-200 hover:shadow-xl dark:border-stone-800 dark:bg-stone-900 dark:hover:border-amber-700 hover-lift animate-slide-up opacity-0"
+                    style={{ animationDelay: `${idx * 150}ms`, animationFillMode: 'forwards' }}
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                       <IconComponent className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="mt-4 font-bold text-stone-900 dark:text-stone-100">
+                    <h3 className="mt-4 font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 transition-colors">
                       {feature.title}
                     </h3>
                     {feature.description && (
@@ -659,31 +678,35 @@ function HomeContentInner({
 
       {/* CTA Section */}
       {ctaSection.headline && (
-        <section className="py-20">
+        <section className="py-20 overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 px-8 py-16 text-center shadow-2xl shadow-amber-500/25 sm:px-16">
-              <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 px-8 py-16 text-center shadow-2xl shadow-amber-500/25 sm:px-16 animate-gradient">
+              <div className="absolute inset-0 pattern-dots opacity-10" />
+              {/* Floating emojis in CTA */}
+              <div className="absolute top-8 left-8 text-4xl opacity-30 animate-float hidden sm:block">🍳</div>
+              <div className="absolute bottom-8 right-8 text-4xl opacity-30 animate-float-slow hidden sm:block">🥘</div>
               <div className="relative">
                 <h2 
-                  className="text-3xl font-bold text-white sm:text-4xl"
+                  className="text-3xl font-bold text-white sm:text-4xl animate-slide-up"
                   {...getEditableProps("home_page", "bltd30052da58732341", "cta_headline")}
                 >
                   {ctaSection.headline}
                 </h2>
                 {ctaSection.description && (
                   <p 
-                    className="mx-auto mt-4 max-w-xl text-lg text-amber-100"
+                    className="mx-auto mt-4 max-w-xl text-lg text-amber-100 animate-slide-up opacity-0 delay-100"
+                    style={{ animationFillMode: 'forwards' }}
                     {...getEditableProps("home_page", "bltd30052da58732341", "cta_description")}
                   >
                     {ctaSection.description}
                   </p>
                 )}
-                <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row animate-slide-up opacity-0 delay-200" style={{ animationFillMode: 'forwards' }}>
                   {ctaSection.primaryButton && (
                     <Link href={ctaSection.primaryButton.url}>
                       <Button
                         size="lg"
-                        className="bg-white text-amber-600 hover:bg-amber-50 shadow-xl"
+                        className="bg-white text-amber-600 hover:bg-amber-50 shadow-xl transition-all hover:scale-105 hover:shadow-2xl"
                       >
                         {ctaSection.primaryButton.label}
                       </Button>
@@ -694,7 +717,7 @@ function HomeContentInner({
                       <Button
                         variant="outline"
                         size="lg"
-                        className="border-white/30 text-white hover:bg-white/10"
+                        className="border-white/30 text-white hover:bg-white/10 transition-all hover:scale-105"
                       >
                         {ctaSection.secondaryButton.label}
                       </Button>
