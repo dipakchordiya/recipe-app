@@ -52,7 +52,7 @@ const indianRecipes = [
       title: "Butter Chicken",
       description: "Creamy, aromatic butter chicken - a beloved North Indian classic with tender chicken in rich tomato-based gravy",
       cooking_time: 45,
-      difficulty: "Medium",
+      difficulty: "medium",
       is_published: true,
       ingredients: [
         { name: "Chicken thighs", quantity: "500", unit: "grams" },
@@ -74,7 +74,7 @@ const indianRecipes = [
       title: "Hyderabadi Chicken Biryani",
       description: "Fragrant layered rice dish with aromatic spices, tender chicken, and saffron - the crown jewel of Indian cuisine",
       cooking_time: 90,
-      difficulty: "Hard",
+      difficulty: "hard",
       is_published: true,
       ingredients: [
         { name: "Basmati rice", quantity: "2", unit: "cups" },
@@ -95,7 +95,7 @@ const indianRecipes = [
       title: "Palak Paneer",
       description: "Creamy spinach curry with soft paneer cubes - a nutritious and delicious vegetarian North Indian favorite",
       cooking_time: 35,
-      difficulty: "Easy",
+      difficulty: "easy",
       is_published: true,
       ingredients: [
         { name: "Spinach", quantity: "500", unit: "grams" },
@@ -116,7 +116,7 @@ const indianRecipes = [
       title: "Masala Dosa",
       description: "Crispy South Indian crepe filled with spiced potato filling - a popular breakfast across India",
       cooking_time: 30,
-      difficulty: "Medium",
+      difficulty: "medium",
       is_published: true,
       ingredients: [
         { name: "Dosa batter", quantity: "2", unit: "cups" },
@@ -141,7 +141,7 @@ const americanRecipes = [
       title: "Classic American Cheeseburger",
       description: "Juicy beef patty with melted cheese, fresh vegetables, and special sauce - the quintessential American meal",
       cooking_time: 25,
-      difficulty: "Easy",
+      difficulty: "easy",
       is_published: true,
       ingredients: [
         { name: "Ground beef", quantity: "500", unit: "grams" },
@@ -162,7 +162,7 @@ const americanRecipes = [
       title: "Southern BBQ Ribs",
       description: "Fall-off-the-bone tender pork ribs glazed with smoky BBQ sauce - a Southern American barbecue staple",
       cooking_time: 180,
-      difficulty: "Medium",
+      difficulty: "medium",
       is_published: true,
       ingredients: [
         { name: "Pork ribs", quantity: "2", unit: "racks" },
@@ -182,7 +182,7 @@ const americanRecipes = [
       title: "Creamy Mac and Cheese",
       description: "Ultra-creamy, cheesy pasta that's the ultimate American comfort food - loved by kids and adults alike",
       cooking_time: 40,
-      difficulty: "Easy",
+      difficulty: "easy",
       is_published: true,
       ingredients: [
         { name: "Elbow macaroni", quantity: "450", unit: "grams" },
@@ -202,7 +202,7 @@ const americanRecipes = [
       title: "Classic American Apple Pie",
       description: "Warm apple pie with flaky crust and cinnamon-spiced filling - as American as it gets!",
       cooking_time: 75,
-      difficulty: "Medium",
+      difficulty: "medium",
       is_published: true,
       ingredients: [
         { name: "Granny Smith apples", quantity: "6", unit: "large" },

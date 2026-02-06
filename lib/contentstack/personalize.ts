@@ -4,7 +4,7 @@
 import Personalize from "@contentstack/personalize-edge-sdk";
 
 // Environment variables for Personalize
-const PERSONALIZE_PROJECT_UID = process.env.NEXT_PUBLIC_PERSONALIZE_PROJECT_UID || "";
+const PERSONALIZE_PROJECT_UID = process.env.NEXT_PUBLIC_PERSONALIZE_PROJECT_UID || "66aa1f8c2014e3e2e703b985";
 
 // Initialize Personalize SDK
 let personalizeInstance: typeof Personalize | null = null;
@@ -98,19 +98,22 @@ export async function getAllVariants(): Promise<Record<string, string>> {
   }
 }
 
-// Experience Short IDs (configure in Contentstack Personalize dashboard)
+// Experience Short IDs (from Contentstack Personalize dashboard)
 export const EXPERIENCES = {
-  HOME_PAGE_HERO: "home_hero_location",
-  HOME_PAGE_RECIPES: "home_recipes_location",
-  FEATURED_RECIPES: "featured_recipes_location",
+  LOCATION_SEGMENT: "location_segment", // Main experience for location-based personalization
 } as const;
 
-// Variant names
+// Audience names (from Personalize dashboard)
+export const AUDIENCES = {
+  INDIA: "India",
+  AMERICA: "America",
+} as const;
+
+// Variant Short IDs (from Personalize dashboard)
 export const VARIANTS = {
   DEFAULT: "default",
-  INDIA: "india",
-  USA: "usa",
-  EUROPE: "europe",
+  IND: "ind",      // India variant
+  USA: "usa",      // America/USA variant
 } as const;
 
 // Helper to detect user location (using IP-based geolocation)

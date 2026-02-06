@@ -36,10 +36,10 @@ const iconMap: Record<string, LucideIcon> = {
   Globe,
 };
 
-// Region display info
+// Region display info - matches Personalize variant short IDs
 const regionInfo = {
-  india: { flag: "🇮🇳", name: "India", color: "from-orange-500 to-green-500" },
-  usa: { flag: "🇺🇸", name: "USA", color: "from-blue-500 to-red-500" },
+  ind: { flag: "🇮🇳", name: "India", color: "from-orange-500 to-green-500" },
+  usa: { flag: "🇺🇸", name: "America", color: "from-blue-500 to-red-500" },
   default: { flag: "🌍", name: "Global", color: "from-amber-500 to-orange-500" },
 };
 
@@ -48,10 +48,10 @@ interface HomeContentProps {
   initialRecipes: Recipe[];
   initialCategories: Category[];
   fetchHomePage: () => Promise<HomePage | null>;
-  detectedRegion?: "india" | "usa" | "default";
+  detectedRegion?: "ind" | "usa" | "default";
   homePageVariants?: {
     default: HomePage | null;
-    india: HomePage | null;
+    ind: HomePage | null;
     usa: HomePage | null;
   };
 }

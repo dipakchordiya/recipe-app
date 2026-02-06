@@ -20,7 +20,7 @@ interface PersonalizeContextType {
   variants: Record<string, string>;
   getVariant: (experienceId: string) => string | null;
   isIndianUser: boolean;
-  isUSUser: boolean;
+  isAmericanUser: boolean;
 }
 
 const PersonalizeContext = createContext<PersonalizeContextType>({
@@ -29,7 +29,7 @@ const PersonalizeContext = createContext<PersonalizeContextType>({
   variants: {},
   getVariant: () => null,
   isIndianUser: false,
-  isUSUser: false,
+  isAmericanUser: false,
 });
 
 export function usePersonalize() {
@@ -76,7 +76,7 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
 
   // Helper flags for location-based logic
   const isIndianUser = location?.countryCode === "IN";
-  const isUSUser = location?.countryCode === "US";
+  const isAmericanUser = location?.countryCode === "US";
 
   return (
     <PersonalizeContext.Provider
@@ -86,7 +86,7 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
         variants,
         getVariant,
         isIndianUser,
-        isUSUser,
+        isAmericanUser,
       }}
     >
       {children}
@@ -98,9 +98,9 @@ export function PersonalizeProvider({ children }: PersonalizeProviderProps) {
 export function useLocationBasedContent<T>(
   defaultContent: T,
   indianContent: T,
-  usContent: T
+  americanContent: T
 ): T {
-  const { isIndianUser, isUSUser, isInitialized } = usePersonalize();
+  const { isIndianUser, isAmericanUser, isInitialized } = usePersonalize();
 
   if (!isInitialized) {
     return defaultContent;
@@ -110,8 +110,8 @@ export function useLocationBasedContent<T>(
     return indianContent;
   }
 
-  if (isUSUser) {
-    return usContent;
+  if (isAmericanUser) {
+    return americanContent;
   }
 
   return defaultContent;

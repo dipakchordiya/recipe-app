@@ -451,39 +451,75 @@ export async function getHomePageByTitle(title: string): Promise<HomePage | null
   }
 }
 
-// Get Home Page variant based on region
-export async function getHomePageForRegion(region: "india" | "usa" | "default"): Promise<HomePage | null> {
-  const titleMap = {
-    india: "Home Page - India",
-    usa: "Home Page - USA",
-    default: "Home Page",
-  };
-  
-  const homePage = await getHomePageByTitle(titleMap[region]);
-  
-  // Fallback to default if regional variant not found
-  if (!homePage && region !== "default") {
+// Variant UIDs from Personalize
+const VARIANT_UIDS = {
+  ind: "cs32b45e98dce08645",
+  usa: "csc983d9bc8d2be49f",
+} as const;
+
+// Get Home Page variant based on region (uses Entry Variants API)
+export async function getHomePageForRegion(region: "ind" | "usa" | "default"): Promise<HomePage | null> {
+  if (region === "default") {
     return getHomePage();
   }
-  
-  return homePage;
+
+  const variantUid = VARIANT_UIDS[region];
+  if (!variantUid) {
+    return getHomePage();
+  }
+
+  try {
+    // Fetch variant using the variants endpoint
+    const API_KEY = process.env.NEXT_PUBLIC_CONTENTSTACK_API_KEY || "";
+    const DELIVERY_TOKEN = process.env.NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN || "";
+    const ENVIRONMENT = process.env.NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT || "development";
+    
+    // Use the variant-specific CDN query
+    const response = await fetch(
+      `https://cdn.contentstack.io/v3/content_types/home_page/entries?environment=${ENVIRONMENT}&include_variant=true&variants[uid]=${variantUid}`,
+      {
+        headers: {
+          "api_key": API_KEY,
+          "access_token": DELIVERY_TOKEN,
+        },
+        cache: "no-store",
+      }
+    );
+    
+    if (!response.ok) {
+      console.error("Failed to fetch variant:", response.status);
+      return getHomePage();
+    }
+    
+    const data = await response.json();
+    const entry = data.entries?.[0];
+    
+    if (!entry) {
+      return getHomePage();
+    }
+    
+    return transformHomePage(entry as unknown as HomePageEntry);
+  } catch (error) {
+    console.error("Error fetching home page variant:", error);
+    return getHomePage();
+  }
 }
 
 // Get all Home Page variants
 export async function getAllHomePageVariants(): Promise<{
   default: HomePage | null;
-  india: HomePage | null;
+  ind: HomePage | null;
   usa: HomePage | null;
 }> {
-  const [defaultPage, indiaPage, usaPage] = await Promise.all([
+  const [defaultPage, indPage, usaPage] = await Promise.all([
     getHomePage(),
-    getHomePageByTitle("Home Page - India"),
-    getHomePageByTitle("Home Page - USA"),
+    getHomePageForRegion("ind"),
+    getHomePageForRegion("usa"),
   ]);
   
   return {
     default: defaultPage,
-    india: indiaPage,
+    ind: indPage,
     usa: usaPage,
   };
 }
@@ -502,13 +538,13 @@ export async function getHomePageData() {
   };
 }
 
-// Get personalized home page data based on region
-export async function getPersonalizedHomePageData(region: "india" | "usa" | "default" = "default") {
+// Get personalized home page data based on region (uses Personalize variant short IDs)
+export async function getPersonalizedHomePageData(region: "ind" | "usa" | "default" = "default") {
   const [homePage, allRecipes, regionalRecipes, categories] = await Promise.all([
     getHomePageForRegion(region),
     getPublishedRecipes(),
-    region === "india" ? getIndianRecipes() : 
-    region === "usa" ? getAmericanRecipes() : 
+    region === "ind" ? getIndianRecipes() :
+    region === "usa" ? getAmericanRecipes() :
     getPublishedRecipes(),
     getAllCategories(),
   ]);

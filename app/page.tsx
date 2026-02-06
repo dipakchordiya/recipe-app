@@ -15,13 +15,13 @@ async function fetchHomePage() {
 }
 
 // Server action to fetch personalized data
-async function fetchPersonalizedData(region: "india" | "usa" | "default") {
+async function fetchPersonalizedData(region: "ind" | "usa" | "default") {
   "use server";
   return await getPersonalizedHomePageData(region);
 }
 
 // Detect region from request headers (Cloudflare, Vercel, etc.)
-async function detectRegion(): Promise<"india" | "usa" | "default"> {
+async function detectRegion(): Promise<"ind" | "usa" | "default"> {
   try {
     const headersList = await headers();
     
@@ -35,7 +35,7 @@ async function detectRegion(): Promise<"india" | "usa" | "default"> {
     
     const countryCode = country.toUpperCase();
     
-    if (countryCode === "IN") return "india";
+    if (countryCode === "IN") return "ind";
     if (countryCode === "US") return "usa";
     
     return "default";
