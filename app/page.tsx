@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { 
+import {
   getPublishedRecipes, 
   getAllCategories, 
   getHomePage,

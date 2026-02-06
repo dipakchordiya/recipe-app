@@ -85,7 +85,7 @@ export default async function RootLayout({
           <LyticsPersonalizeProvider>
             <LivePreviewProvider>
               <Navbar header={header} />
-              <main className="flex-1">{children}</main>
+          <main className="flex-1">{children}</main>
               <Footer footer={footer} />
             </LivePreviewProvider>
           </LyticsPersonalizeProvider>

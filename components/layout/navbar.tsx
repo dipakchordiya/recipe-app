@@ -91,18 +91,18 @@ export function Navbar({ header }: NavbarProps) {
 
         {/* Search */}
         {showSearch && (
-          <form onSubmit={handleSearch} className="hidden lg:flex items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-              <input
-                type="text"
-                placeholder="Search recipes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 w-64 rounded-xl border-2 border-stone-200 bg-stone-50 pl-10 pr-4 text-sm placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all dark:border-stone-700 dark:bg-stone-900 dark:focus:border-amber-500"
-              />
-            </div>
-          </form>
+        <form onSubmit={handleSearch} className="hidden lg:flex items-center">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-10 w-64 rounded-xl border-2 border-stone-200 bg-stone-50 pl-10 pr-4 text-sm placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all dark:border-stone-700 dark:bg-stone-900 dark:focus:border-amber-500"
+            />
+          </div>
+        </form>
         )}
 
         {/* Right Side */}
@@ -164,9 +164,9 @@ export function Navbar({ header }: NavbarProps) {
                   <Button size="sm">{ctaButton.label}</Button>
                 </Link>
               ) : (
-                <Link href="/signup" className="hidden sm:block">
-                  <Button size="sm">Sign Up</Button>
-                </Link>
+              <Link href="/signup" className="hidden sm:block">
+                <Button size="sm">Sign Up</Button>
+              </Link>
               )}
             </div>
           )}
@@ -191,18 +191,18 @@ export function Navbar({ header }: NavbarProps) {
           <div className="p-4 space-y-2">
             {/* Mobile Search */}
             {showSearch && (
-              <form onSubmit={handleSearch} className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                  <input
-                    type="text"
-                    placeholder="Search recipes..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-11 w-full rounded-xl border-2 border-stone-200 bg-stone-50 pl-10 pr-4 text-sm placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-none transition-all dark:border-stone-700 dark:bg-stone-900"
-                  />
-                </div>
-              </form>
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder="Search recipes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-11 w-full rounded-xl border-2 border-stone-200 bg-stone-50 pl-10 pr-4 text-sm placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-none transition-all dark:border-stone-700 dark:bg-stone-900"
+                />
+              </div>
+            </form>
             )}
 
             {navLinks.map((link) => (

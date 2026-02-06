@@ -184,11 +184,11 @@ export function RecipeDetail({ recipe, comments: initialComments }: RecipeDetail
     
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({
-          title: recipe.title,
-          text: recipe.description || `Check out this recipe: ${recipe.title}`,
-          url: window.location.href,
-        });
+      await navigator.share({
+        title: recipe.title,
+        text: recipe.description || `Check out this recipe: ${recipe.title}`,
+        url: window.location.href,
+      });
         shareMethod = "native";
       } catch {
         // User cancelled or share failed, fall back to clipboard

@@ -488,10 +488,12 @@ export async function getHomePageForRegion(region: "ind" | "usa" | "default"): P
       return getHomePage();
     }
     
-    const url = `https://cdn.contentstack.io/v3/content_types/home_page/entries/${HOME_PAGE_ENTRY_UID}?environment=${ENVIRONMENT}`;
+    // Add timestamp to bust any CDN caching
+    const timestamp = Date.now();
+    const url = `https://cdn.contentstack.io/v3/content_types/home_page/entries/${HOME_PAGE_ENTRY_UID}?environment=${ENVIRONMENT}&_=${timestamp}`;
     console.log(`[Variants] Fetching: ${url}`);
     
-    // Fetch the specific entry with the variant header
+    // Fetch the specific entry with the variant header (no caching)
     const response = await fetch(url, {
       headers: {
         "api_key": API_KEY,

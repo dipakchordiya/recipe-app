@@ -74,16 +74,16 @@ export function Footer({ footer }: FooterProps) {
               {socialLinks.map((social, idx) => {
                 const IconComponent = socialIcons[social.platform];
                 return (
-                  <a
+              <a
                     key={idx}
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-stone-400 hover:text-amber-500 transition-colors"
+                className="text-stone-400 hover:text-amber-500 transition-colors"
                     aria-label={social.platform}
-                  >
+              >
                     <IconComponent className="h-5 w-5" />
-                  </a>
+              </a>
                 );
               })}
             </div>
@@ -92,22 +92,22 @@ export function Footer({ footer }: FooterProps) {
           {/* Dynamic Link Sections */}
           {linkSections.map((section, idx) => (
             <div key={idx}>
-              <h3 className="font-semibold text-stone-900 dark:text-stone-100">
+            <h3 className="font-semibold text-stone-900 dark:text-stone-100">
                 {section.section_title}
-              </h3>
-              <ul className="mt-4 space-y-3">
+            </h3>
+            <ul className="mt-4 space-y-3">
                 {section.links?.map((link, linkIdx) => (
                   <li key={linkIdx}>
-                    <Link
+                  <Link
                       href={link.url}
-                      className="text-sm text-stone-500 hover:text-amber-600 transition-colors dark:text-stone-400 dark:hover:text-amber-400"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                    className="text-sm text-stone-500 hover:text-amber-600 transition-colors dark:text-stone-400 dark:hover:text-amber-400"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
           ))}
         </div>
 
