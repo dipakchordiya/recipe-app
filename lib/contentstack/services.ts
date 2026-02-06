@@ -457,7 +457,10 @@ const VARIANT_UIDS = {
   usa: "csc983d9bc8d2be49f",
 } as const;
 
-// Get Home Page variant based on region (uses Entry Variants API)
+// Home Page entry UID
+const HOME_PAGE_ENTRY_UID = "bltd30052da58732341";
+
+// Get Home Page variant based on region (uses Entry Variants API with x-cs-variant-uid header)
 export async function getHomePageForRegion(region: "ind" | "usa" | "default"): Promise<HomePage | null> {
   if (region === "default") {
     return getHomePage();
@@ -469,18 +472,18 @@ export async function getHomePageForRegion(region: "ind" | "usa" | "default"): P
   }
 
   try {
-    // Fetch variant using the variants endpoint
     const API_KEY = process.env.NEXT_PUBLIC_CONTENTSTACK_API_KEY || "";
     const DELIVERY_TOKEN = process.env.NEXT_PUBLIC_CONTENTSTACK_DELIVERY_TOKEN || "";
     const ENVIRONMENT = process.env.NEXT_PUBLIC_CONTENTSTACK_ENVIRONMENT || "development";
     
-    // Use the variant-specific CDN query
+    // Fetch the specific entry with the variant header
     const response = await fetch(
-      `https://cdn.contentstack.io/v3/content_types/home_page/entries?environment=${ENVIRONMENT}&include_variant=true&variants[uid]=${variantUid}`,
+      `https://cdn.contentstack.io/v3/content_types/home_page/entries/${HOME_PAGE_ENTRY_UID}?environment=${ENVIRONMENT}`,
       {
         headers: {
           "api_key": API_KEY,
           "access_token": DELIVERY_TOKEN,
+          "x-cs-variant-uid": variantUid,
         },
         cache: "no-store",
       }
@@ -492,12 +495,14 @@ export async function getHomePageForRegion(region: "ind" | "usa" | "default"): P
     }
     
     const data = await response.json();
-    const entry = data.entries?.[0];
+    const entry = data.entry;
     
     if (!entry) {
+      console.error("No entry in response for variant:", region);
       return getHomePage();
     }
     
+    console.log(`✓ Fetched ${region} variant:`, entry.hero_badge_text);
     return transformHomePage(entry as unknown as HomePageEntry);
   } catch (error) {
     console.error("Error fetching home page variant:", error);

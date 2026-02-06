@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   ChefHat,
@@ -65,26 +65,22 @@ function HomeContentInner({
   homePageVariants,
 }: HomeContentProps) {
   // Use live preview hook for real-time updates
-  const homePage = useLivePreviewUpdate(initialHomePage, fetchHomePage);
+  const livePreviewHomePage = useLivePreviewUpdate(initialHomePage, fetchHomePage);
   const [currentRegion, setCurrentRegion] = useState(detectedRegion);
-  const [displayedHomePage, setDisplayedHomePage] = useState(homePage);
 
-  // Update displayed home page when region changes
-  useEffect(() => {
-    if (homePageVariants) {
+  // Determine which home page to display based on region
+  const displayedHomePage = useMemo(() => {
+    // If we have variants and user selected a region, use that variant
+    if (homePageVariants && currentRegion !== "default") {
       const variant = homePageVariants[currentRegion];
       if (variant) {
-        setDisplayedHomePage(variant);
+        console.log("Using variant for region:", currentRegion, variant.hero?.badgeText);
+        return variant;
       }
     }
-  }, [currentRegion, homePageVariants]);
-
-  // Update when live preview changes
-  useEffect(() => {
-    if (homePage) {
-      setDisplayedHomePage(homePage);
-    }
-  }, [homePage]);
+    // Otherwise use the live preview or initial home page
+    return livePreviewHomePage || initialHomePage;
+  }, [currentRegion, homePageVariants, livePreviewHomePage, initialHomePage]);
 
   const recipes = initialRecipes;
   const categories = initialCategories;
