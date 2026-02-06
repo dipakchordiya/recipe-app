@@ -6,6 +6,7 @@ import { Heart, Clock, ChefHat, MessageCircle, Bookmark } from "lucide-react";
 import { Badge, Avatar } from "@/components/ui";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import type { RecipeWithAuthor } from "@/types/database";
+import { detectCuisineFromCategory, detectCuisineFromTags, setStoredPreference } from "@/lib/personalization";
 
 interface RecipeCardProps {
   recipe: RecipeWithAuthor;
@@ -32,8 +33,33 @@ export function RecipeCard({ recipe, onLike, onSave }: RecipeCardProps) {
     onSave?.();
   };
 
+  // Track cuisine preference based on recipe category/tags
+  const handleRecipeClick = () => {
+    const cuisineFromCategory = detectCuisineFromCategory(recipe.category);
+    const cuisineFromTags = detectCuisineFromTags(recipe.tags as string[] | null);
+    const detectedCuisine = cuisineFromCategory || cuisineFromTags;
+    
+    if (detectedCuisine) {
+      // Store in localStorage for click-based personalization
+      const key = "recipe_click_history";
+      try {
+        const history = JSON.parse(localStorage.getItem(key) || '{"indian":0,"american":0}');
+        history[detectedCuisine]++;
+        localStorage.setItem(key, JSON.stringify(history));
+        
+        // If clear preference (3+ clicks), set it directly
+        if (history[detectedCuisine] >= 2) {
+          setStoredPreference(detectedCuisine);
+          console.log(`📊 Set preference to ${detectedCuisine} based on clicks`);
+        }
+      } catch {
+        // Silently fail
+      }
+    }
+  };
+
   return (
-    <Link href={`/recipes/${recipe.id}`}>
+    <Link href={`/recipes/${recipe.id}`} onClick={handleRecipeClick}>
       <article className="group relative overflow-hidden rounded-2xl border-2 border-stone-100 bg-white transition-all duration-300 hover:border-amber-200 hover:shadow-xl hover:shadow-amber-500/10 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-amber-700">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-stone-800">

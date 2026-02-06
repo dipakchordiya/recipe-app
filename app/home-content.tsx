@@ -22,6 +22,7 @@ import {
   getEditableProps,
 } from "@/lib/contentstack";
 import type { HomePage, Recipe, Category } from "@/lib/contentstack";
+import { useUserCuisinePreference, type CuisinePreference } from "@/lib/personalization";
 
 // Icon mapping for dynamic icons
 const iconMap: Record<string, LucideIcon> = {
@@ -41,6 +42,33 @@ const regionInfo = {
   ind: { flag: "🇮🇳", name: "India", color: "from-orange-500 to-green-500" },
   usa: { flag: "🇺🇸", name: "America", color: "from-blue-500 to-red-500" },
   default: { flag: "🌍", name: "Global", color: "from-amber-500 to-orange-500" },
+};
+
+// Banner images for click-based personalization
+const bannerConfig: Record<CuisinePreference, {
+  image: string;
+  gradient: string;
+  overlay: string;
+  pattern: string;
+}> = {
+  indian: {
+    image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1920&q=80", // Indian food spread
+    gradient: "from-orange-900/90 via-red-900/70 to-amber-900/80",
+    overlay: "bg-gradient-to-r from-orange-500/20 to-red-500/20",
+    pattern: "🍛",
+  },
+  american: {
+    image: "https://images.unsplash.com/photo-1550547660-d9450f859349?w=1920&q=80", // Burger
+    gradient: "from-blue-900/90 via-slate-900/70 to-red-900/80",
+    overlay: "bg-gradient-to-r from-blue-500/20 to-red-500/20",
+    pattern: "🍔",
+  },
+  default: {
+    image: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=1920&q=80", // General cooking
+    gradient: "from-stone-900/90 via-amber-900/70 to-orange-900/80",
+    overlay: "bg-gradient-to-r from-amber-500/20 to-orange-500/20",
+    pattern: "🍽️",
+  },
 };
 
 interface HomeContentProps {
@@ -67,6 +95,12 @@ function HomeContentInner({
   // Use live preview hook for real-time updates
   const livePreviewHomePage = useLivePreviewUpdate(initialHomePage, fetchHomePage);
   const [currentRegion, setCurrentRegion] = useState(detectedRegion);
+  
+  // Click-based cuisine preference
+  const { preference: cuisinePreference, trackClick, clickHistory, resetPreference } = useUserCuisinePreference();
+  
+  // Get banner config based on cuisine preference
+  const currentBanner = bannerConfig[cuisinePreference];
 
   // Determine which home page to display based on region
   const displayedHomePage = useMemo(() => {
@@ -186,9 +220,35 @@ function HomeContentInner({
         </div>
       )}
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden hero-gradient">
-        <div className="absolute inset-0 pattern-dots opacity-50" />
+      {/* Hero Section with Personalized Banner */}
+      <section 
+        className="relative overflow-hidden min-h-[70vh] flex items-center"
+        style={{
+          backgroundImage: `url(${currentBanner.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dynamic gradient overlay based on cuisine preference */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${currentBanner.gradient}`} />
+        <div className={`absolute inset-0 ${currentBanner.overlay}`} />
+        <div className="absolute inset-0 pattern-dots opacity-30" />
+        
+        {/* Cuisine Preference Indicator */}
+        {cuisinePreference !== "default" && (
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+            <span className="text-2xl">{currentBanner.pattern}</span>
+            <span className="text-sm font-medium text-white capitalize">
+              {cuisinePreference === "indian" ? "Indian Cuisine" : "American Cuisine"} Mode
+            </span>
+            <button
+              onClick={resetPreference}
+              className="ml-2 text-xs text-white/70 hover:text-white underline"
+            >
+              Reset
+            </button>
+          </div>
+        )}
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             {hero.badgeText && (
@@ -202,13 +262,13 @@ function HomeContentInner({
               </Badge>
             )}
             <h1 
-              className="text-4xl font-bold tracking-tight text-stone-900 sm:text-6xl dark:text-stone-100"
+              className="text-4xl font-bold tracking-tight text-white sm:text-6xl drop-shadow-lg"
               {...getEditableProps("home_page", "bltd30052da58732341", "hero_headline")}
             >
               {hero.headline}{" "}
               {hero.highlightText && (
                 <span 
-                  className="text-gradient"
+                  className="text-amber-300"
                   {...getEditableProps("home_page", "bltd30052da58732341", "hero_highlight_text")}
                 >
                   {hero.highlightText}
@@ -217,7 +277,7 @@ function HomeContentInner({
             </h1>
             {hero.description && (
               <p 
-                className="mt-6 text-lg leading-8 text-stone-600 dark:text-stone-400"
+                className="mt-6 text-lg leading-8 text-white/90 drop-shadow-md"
                 {...getEditableProps("home_page", "bltd30052da58732341", "hero_description")}
               >
                 {hero.description}
