@@ -41,36 +41,59 @@ export function LyticsPersonalizeProvider({ children, lyticsAccountId }: Provide
 
   // Initialize Personalize on mount (Lytics is initialized via LyticsScript in layout)
   useEffect(() => {
+    let isMounted = true;
+
     async function init() {
       try {
-        // Initialize Personalize
-        await initPersonalize();
-        console.log("✓ Personalize initialized");
-
-        // Detect and sync location
-        const detectedLocation = await detectAndSyncLocation();
-        if (detectedLocation) {
-          setLocation(detectedLocation);
+        // Initialize Personalize (wrapped in try-catch)
+        try {
+          await initPersonalize();
+          console.log("✓ Personalize initialized");
+        } catch (e) {
+          console.warn("Personalize initialization failed:", e);
         }
+
+        // Detect and sync location (non-blocking)
+        detectAndSyncLocation()
+          .then((detectedLocation) => {
+            if (isMounted && detectedLocation) {
+              setLocation(detectedLocation);
+            }
+          })
+          .catch((e) => {
+            console.warn("Location detection error:", e);
+          });
 
         // Sync Lytics data to Personalize (Lytics script handles its own init)
         // Wait a bit for Lytics to be ready
         setTimeout(async () => {
-          if (isLyticsLoaded()) {
-            await syncLyticsToPersonalize();
-            console.log("✓ Lytics synced to Personalize");
+          if (isMounted && isLyticsLoaded()) {
+            try {
+              await syncLyticsToPersonalize();
+              console.log("✓ Lytics synced to Personalize");
+            } catch (e) {
+              console.warn("Lytics sync failed:", e);
+            }
           }
         }, 2000);
 
-        setIsReady(true);
-        console.log("✓ Personalize ready");
+        if (isMounted) {
+          setIsReady(true);
+          console.log("✓ Personalize ready");
+        }
       } catch (error) {
         console.error("Initialization error:", error);
-        setIsReady(true); // Still mark as ready to not block UI
+        if (isMounted) {
+          setIsReady(true); // Still mark as ready to not block UI
+        }
       }
     }
 
     init();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Page views are now tracked automatically by LyticsScript component
@@ -120,35 +143,70 @@ export function LyticsPersonalizeProvider({ children, lyticsAccountId }: Provide
   );
 }
 
-// Helper to detect and sync location
+// Helper to detect and sync location with timeout and fallbacks
 async function detectAndSyncLocation(): Promise<{
   country: string;
   countryCode: string;
   city: string;
 } | null> {
-  try {
-    const response = await fetch("https://ipapi.co/json/");
-    if (!response.ok) return null;
-    
-    const data = await response.json();
-    
-    const location = {
+  // Skip location detection in SSR or if fetch is not available
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  // Try multiple geolocation APIs with fallbacks
+  const geoApis = [
+    { url: "https://ipapi.co/json/", parser: (data: Record<string, string>) => ({
       country: data.country_name || "Unknown",
       countryCode: data.country_code || "XX",
       city: data.city || "",
-    };
+    })},
+    { url: "https://ip-api.com/json/?fields=country,countryCode,city", parser: (data: Record<string, string>) => ({
+      country: data.country || "Unknown",
+      countryCode: data.countryCode || "XX",
+      city: data.city || "",
+    })},
+  ];
 
-    // Send to Personalize
-    await setUserAttributes({
-      country: location.country,
-      country_code: location.countryCode,
-      city: location.city,
-      geo_country: location.countryCode,
-    });
+  for (const api of geoApis) {
+    try {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-    return location;
-  } catch (error) {
-    console.error("Location detection failed:", error);
-    return null;
+      const response = await fetch(api.url, { 
+        signal: controller.signal,
+        mode: "cors",
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) continue;
+      
+      const data = await response.json();
+      const location = api.parser(data);
+
+      // Send to Personalize
+      try {
+        await setUserAttributes({
+          country: location.country,
+          country_code: location.countryCode,
+          city: location.city,
+          geo_country: location.countryCode,
+        });
+      } catch (e) {
+        console.warn("Failed to set user attributes:", e);
+      }
+
+      console.log("✓ Location detected:", location);
+      return location;
+    } catch (error) {
+      // Continue to next API on error
+      console.warn(`Geo API ${api.url} failed:`, error);
+      continue;
+    }
   }
+
+  // All APIs failed - return null but don't block
+  console.warn("All location detection APIs failed, continuing without location");
+  return null;
 }
