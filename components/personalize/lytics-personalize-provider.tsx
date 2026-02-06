@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { initLytics, trackPageView, identifyUser, isLyticsLoaded } from "@/lib/lytics/client";
+import { identifyUser, isLyticsLoaded } from "@/lib/lytics/client";
 import { syncLyticsToPersonalize } from "@/lib/lytics/lytics-personalize-connector";
 import { initPersonalize, setUserAttributes } from "@/lib/contentstack/personalize";
 
@@ -39,17 +39,10 @@ export function LyticsPersonalizeProvider({ children, lyticsAccountId }: Provide
   const [location, setLocation] = useState<LyticsPersonalizeContextType["location"]>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Initialize Lytics and Personalize on mount
+  // Initialize Personalize on mount (Lytics is initialized via LyticsScript in layout)
   useEffect(() => {
     async function init() {
       try {
-        // Initialize Lytics
-        const accountId = lyticsAccountId || process.env.NEXT_PUBLIC_LYTICS_ACCOUNT_ID;
-        if (accountId) {
-          await initLytics(accountId);
-          console.log("✓ Lytics initialized");
-        }
-
         // Initialize Personalize
         await initPersonalize();
         console.log("✓ Personalize initialized");
@@ -60,11 +53,17 @@ export function LyticsPersonalizeProvider({ children, lyticsAccountId }: Provide
           setLocation(detectedLocation);
         }
 
-        // Sync Lytics data to Personalize
-        await syncLyticsToPersonalize();
+        // Sync Lytics data to Personalize (Lytics script handles its own init)
+        // Wait a bit for Lytics to be ready
+        setTimeout(async () => {
+          if (isLyticsLoaded()) {
+            await syncLyticsToPersonalize();
+            console.log("✓ Lytics synced to Personalize");
+          }
+        }, 2000);
 
         setIsReady(true);
-        console.log("✓ Lytics + Personalize ready");
+        console.log("✓ Personalize ready");
       } catch (error) {
         console.error("Initialization error:", error);
         setIsReady(true); // Still mark as ready to not block UI
@@ -72,16 +71,9 @@ export function LyticsPersonalizeProvider({ children, lyticsAccountId }: Provide
     }
 
     init();
-  }, [lyticsAccountId]);
+  }, []);
 
-  // Track page views
-  useEffect(() => {
-    if (isReady && isLyticsLoaded()) {
-      trackPageView({
-        path: pathname,
-      });
-    }
-  }, [pathname, isReady]);
+  // Page views are now tracked automatically by LyticsScript component
 
   // Identify user function
   const identify = (userData: { email?: string; name?: string; [key: string]: unknown }) => {

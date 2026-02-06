@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { Providers } from "@/components/layout/providers";
 import { LivePreviewProvider } from "@/components/layout/live-preview-provider";
 import { LyticsPersonalizeProvider } from "@/components/personalize/lytics-personalize-provider";
+import { LyticsScript } from "@/components/analytics/lytics-script";
 import { getLayoutData } from "@/lib/contentstack/services";
 
 const dmSans = DM_Sans({
@@ -73,6 +74,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Lytics Analytics Script */}
+        <LyticsScript />
+      </head>
       <body
         className={`${dmSans.variable} ${jetbrainsMono.variable} antialiased min-h-screen flex flex-col`}
       >

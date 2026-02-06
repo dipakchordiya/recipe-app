@@ -1,7 +1,8 @@
 // Lytics CDP Integration
+// The Lytics script is loaded via LyticsScript component in layout.tsx
+
 export {
   // Core
-  initLytics,
   isLyticsLoaded,
   sendEvent,
   getLyticsUserId,
@@ -39,6 +40,11 @@ export {
   // Engagement
   trackEngagement,
   trackFilterUsage,
+  
+  // Entity loading
+  loadUserEntity,
+  getUserEntity,
+  onLyticsEvent,
 } from "./client";
 
 // Lytics-Personalize connector
