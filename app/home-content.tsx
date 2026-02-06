@@ -120,6 +120,7 @@ function HomeContentInner({
   // Use live preview hook for real-time updates
   const livePreviewHomePage = useLivePreviewUpdate(initialHomePage, fetchHomePage);
   const [currentRegion, setCurrentRegion] = useState<RegionKey>(detectedRegion);
+  const [isAutoPersonalized, setIsAutoPersonalized] = useState(false);
   
   // Click-based cuisine preference
   const { preference: cuisinePreference, resetPreference } = useUserCuisinePreference();
@@ -127,9 +128,34 @@ function HomeContentInner({
   // Get current region info
   const currentRegionInfo = regionInfo[currentRegion];
 
+  // Auto-personalize based on click history when returning to home page
+  useEffect(() => {
+    if (cuisinePreference !== "default" && homePageVariants) {
+      // Map cuisine preference to region
+      const preferenceToRegion: Record<CuisinePreference, RegionKey> = {
+        indian: "ind",
+        american: "usa",
+        default: "default",
+      };
+      
+      const targetRegion = preferenceToRegion[cuisinePreference];
+      
+      // Only auto-switch if we have the variant and it's different from current
+      if (targetRegion !== currentRegion && homePageVariants[targetRegion]) {
+        console.log(`🎯 Auto-personalizing to ${targetRegion} based on click history (${cuisinePreference})`);
+        setCurrentRegion(targetRegion);
+        setIsAutoPersonalized(true);
+        
+        // Clear the auto-personalized flag after a short delay
+        setTimeout(() => setIsAutoPersonalized(false), 3000);
+      }
+    }
+  }, [cuisinePreference, homePageVariants]); // Only run when preference changes
+
   // Handle region change - updates everything: banner, text, recipes
   const handleRegionChange = useCallback((region: RegionKey) => {
     setCurrentRegion(region);
+    setIsAutoPersonalized(false); // Manual change clears auto flag
     
     // Track in Lytics
     trackRegionSelection(region, "region_switcher");
@@ -308,6 +334,24 @@ function HomeContentInner({
       {/* Live Preview Indicator */}
       <LivePreviewIndicator />
 
+      {/* Auto-Personalization Notification */}
+      {isAutoPersonalized && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top fade-in duration-300">
+          <div className="flex items-center gap-3 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-white shadow-lg">
+            <Sparkles className="h-5 w-5" />
+            <span className="font-medium">
+              Personalized for you! Showing {currentRegionInfo.name} content based on your interests.
+            </span>
+            <button
+              onClick={() => handleRegionChange("default")}
+              className="ml-2 rounded-full bg-white/20 px-3 py-1 text-sm hover:bg-white/30 transition-colors"
+            >
+              Show All
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Region Switcher - Controls banner, text, and recipes */}
       <div className="fixed bottom-4 left-4 z-50 flex flex-col gap-2 rounded-2xl bg-white/95 p-4 shadow-xl backdrop-blur-sm border border-stone-200 dark:bg-stone-900/95 dark:border-stone-700">
         <div className="flex items-center gap-2 text-xs font-medium text-stone-600 dark:text-stone-400">
@@ -317,9 +361,15 @@ function HomeContentInner({
         <div className="flex items-center gap-2">
           <span className="text-2xl">{currentRegionInfo.flag}</span>
           <div className="flex flex-col">
-            <span className="font-semibold text-stone-900 dark:text-stone-100">{currentRegionInfo.name}</span>
+            <span className="font-semibold text-stone-900 dark:text-stone-100">
+              {currentRegionInfo.name}
+              {isAutoPersonalized && (
+                <span className="ml-1 text-amber-500">✨</span>
+              )}
+            </span>
             <span className="text-xs text-stone-500">
               {latestRecipes.length} recipes
+              {isAutoPersonalized && " • Auto"}
             </span>
           </div>
         </div>
