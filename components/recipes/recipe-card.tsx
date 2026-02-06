@@ -7,6 +7,7 @@ import { Badge, Avatar } from "@/components/ui";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import type { RecipeWithAuthor } from "@/types/database";
 import { detectCuisineFromCategory, detectCuisineFromTags, setStoredPreference } from "@/lib/personalization";
+import { trackRecipeClick, trackRecipeLike, trackRecipeSave, trackCuisinePreference } from "@/lib/lytics";
 
 interface RecipeCardProps {
   recipe: RecipeWithAuthor;
@@ -24,22 +25,36 @@ export function RecipeCard({ recipe, onLike, onSave }: RecipeCardProps) {
   const handleLikeClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Track like in Lytics
+    trackRecipeLike(recipe.id, recipe.title, !recipe.is_liked);
+    
     onLike?.();
   };
 
   const handleSaveClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Track save in Lytics
+    trackRecipeSave(recipe.id, recipe.title, !recipe.is_saved);
+    
     onSave?.();
   };
 
   // Track cuisine preference based on recipe category/tags
   const handleRecipeClick = () => {
+    // Track recipe click in Lytics
+    trackRecipeClick(recipe.id, recipe.title, recipe.category || undefined, "recipe_card");
+    
     const cuisineFromCategory = detectCuisineFromCategory(recipe.category);
     const cuisineFromTags = detectCuisineFromTags(recipe.tags as string[] | null);
     const detectedCuisine = cuisineFromCategory || cuisineFromTags;
     
     if (detectedCuisine) {
+      // Track cuisine preference in Lytics
+      trackCuisinePreference(detectedCuisine, "recipe_click");
+      
       // Store in localStorage for click-based personalization
       const key = "recipe_click_history";
       try {

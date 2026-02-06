@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui";
 import { detectCuisineFromCategory, setStoredPreference } from "@/lib/personalization";
+import { trackCategoryClick, trackCuisinePreference } from "@/lib/lytics";
 
 interface CategoryCardProps {
   name: string;
@@ -16,9 +17,15 @@ interface CategoryCardProps {
 export function CategoryCard({ name, emoji, description, color, recipeCount }: CategoryCardProps) {
   // Track cuisine preference based on category
   const handleCategoryClick = () => {
+    // Track category click in Lytics
+    trackCategoryClick(name, "category_list");
+    
     const cuisine = detectCuisineFromCategory(name);
     
     if (cuisine) {
+      // Track cuisine preference in Lytics
+      trackCuisinePreference(cuisine, "category_click");
+      
       // Store in localStorage for click-based personalization
       const key = "recipe_click_history";
       try {

@@ -2,8 +2,6 @@
 // This syncs Lytics user attributes to Contentstack Personalize
 
 import { setUserAttributes, setLocationAttributes } from "../contentstack/personalize";
-
-const LYTICS_ACCOUNT_ID = "1748c1c6477f791602278b9737df4f9f";
 import { isLyticsLoaded, getLyticsUserId } from "./client";
 
 // Fetch user profile from Lytics

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,7 @@ import {
 import { Comments } from "@/components/recipes/comments";
 import { useAuth } from "@/contexts/auth-context";
 import { formatDate, cn } from "@/lib/utils";
+import { trackRecipeView, trackRecipeLike, trackRecipeSave, trackRecipeShare, trackEngagement } from "@/lib/lytics";
 
 interface Profile {
   id: string;
@@ -93,10 +94,31 @@ export function RecipeDetail({ recipe, comments: initialComments }: RecipeDetail
   const [comments, setComments] = useState(initialComments);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Track engagement time
+  const startTimeRef = useRef<number>(Date.now());
 
   const isOwner = user?.id === recipe.user_id;
   const ingredients = recipe.ingredients || [];
   const steps = recipe.steps.split("\n").filter((step) => step.trim());
+  
+  // Track recipe view on mount
+  useEffect(() => {
+    // Detect cuisine from category
+    const cuisine = recipe.category?.toLowerCase().includes("indian") ? "indian" 
+                  : recipe.category?.toLowerCase().includes("american") ? "american" 
+                  : undefined;
+    
+    trackRecipeView(recipe.id, recipe.title, recipe.category || undefined, cuisine);
+    
+    // Track engagement on unmount
+    return () => {
+      const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      if (duration > 3) { // Only track if user spent more than 3 seconds
+        trackEngagement("recipe_detail", duration);
+      }
+    };
+  }, [recipe.id, recipe.title, recipe.category]);
 
   // Check if user has liked/saved this recipe
   useEffect(() => {
@@ -128,6 +150,9 @@ export function RecipeDetail({ recipe, comments: initialComments }: RecipeDetail
       const data = await res.json();
       setIsLiked(data.liked);
       setLikesCount((prev) => (data.liked ? prev + 1 : prev - 1));
+      
+      // Track in Lytics
+      trackRecipeLike(recipe.id, recipe.title, data.liked);
     } catch (error) {
       console.error("Failed to like:", error);
     }
@@ -146,22 +171,37 @@ export function RecipeDetail({ recipe, comments: initialComments }: RecipeDetail
       const data = await res.json();
       setIsSaved(data.saved);
       addToast(data.saved ? "Recipe saved!" : "Recipe removed from saved", "info");
+      
+      // Track in Lytics
+      trackRecipeSave(recipe.id, recipe.title, data.saved);
     } catch (error) {
       console.error("Failed to save:", error);
     }
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: recipe.title,
-        text: recipe.description || `Check out this recipe: ${recipe.title}`,
-        url: window.location.href,
-      });
+    let shareMethod = "clipboard";
+    
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: recipe.title,
+          text: recipe.description || `Check out this recipe: ${recipe.title}`,
+          url: window.location.href,
+        });
+        shareMethod = "native";
+      } catch {
+        // User cancelled or share failed, fall back to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        addToast("Link copied to clipboard!", "success");
+      }
     } else {
       await navigator.clipboard.writeText(window.location.href);
       addToast("Link copied to clipboard!", "success");
     }
+    
+    // Track in Lytics
+    trackRecipeShare(recipe.id, recipe.title, shareMethod);
   };
 
   const handlePrint = () => {
