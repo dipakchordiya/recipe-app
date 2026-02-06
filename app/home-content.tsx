@@ -19,7 +19,6 @@ import { RecipeGrid } from "@/components/recipes/recipe-grid";
 import {
   useLivePreviewUpdate,
   LivePreviewIndicator,
-  getEditableProps,
 } from "@/lib/contentstack";
 import type { HomePage, Recipe, Category } from "@/lib/contentstack";
 import { useUserCuisinePreference, type CuisinePreference, setStoredPreference } from "@/lib/personalization";
@@ -443,7 +442,7 @@ function HomeContentInner({
               <Badge 
                 variant="default" 
                 className="mb-6 gap-2 animate-slide-up animate-pulse-glow"
-                {...getEditableProps("home_page", "bltd30052da58732341", "hero_badge_text")}
+
               >
                 <Sparkles className="h-3.5 w-3.5 animate-spin-slow" />
                 {hero.badgeText}
@@ -452,13 +451,13 @@ function HomeContentInner({
             <h1 
               className="text-4xl font-bold tracking-tight text-white sm:text-6xl drop-shadow-lg animate-slide-up opacity-0 delay-100"
               style={{ animationFillMode: 'forwards' }}
-              {...getEditableProps("home_page", "bltd30052da58732341", "hero_headline")}
+
             >
               {hero.headline}{" "}
               {hero.highlightText && (
                 <span 
                   className="text-gradient-animated"
-                  {...getEditableProps("home_page", "bltd30052da58732341", "hero_highlight_text")}
+
                 >
                   {hero.highlightText}
                 </span>
@@ -468,7 +467,7 @@ function HomeContentInner({
               <p 
                 className="mt-6 text-lg leading-8 text-white/90 drop-shadow-md animate-slide-up opacity-0 delay-200"
                 style={{ animationFillMode: 'forwards' }}
-                {...getEditableProps("home_page", "bltd30052da58732341", "hero_description")}
+
               >
                 {hero.description}
               </p>
@@ -519,14 +518,14 @@ function HomeContentInner({
               <div>
                 <h2 
                   className="text-2xl font-bold text-stone-900 dark:text-stone-100"
-                  {...getEditableProps("home_page", "bltd30052da58732341", "categories_section_title")}
+
                 >
                   {categoriesSection.title}
                 </h2>
                 {categoriesSection.subtitle && (
                   <p 
                     className="mt-1 text-stone-500"
-                    {...getEditableProps("home_page", "bltd30052da58732341", "categories_section_subtitle")}
+
                   >
                     {categoriesSection.subtitle}
                   </p>
@@ -573,14 +572,14 @@ function HomeContentInner({
               <div>
                 <h2 
                   className="text-2xl font-bold text-stone-900 dark:text-stone-100"
-                  {...getEditableProps("home_page", "bltd30052da58732341", "recipes_section_title")}
+
                 >
                   {recipesSection.title}
                 </h2>
                 {recipesSection.subtitle && (
                   <p 
                     className="text-stone-500"
-                    {...getEditableProps("home_page", "bltd30052da58732341", "recipes_section_subtitle")}
+
                   >
                     {recipesSection.subtitle}
                   </p>
@@ -634,14 +633,14 @@ function HomeContentInner({
             <div className="mx-auto max-w-2xl text-center">
               <h2 
                 className="text-3xl font-bold text-stone-900 dark:text-stone-100"
-                {...getEditableProps("home_page", "bltd30052da58732341", "features_section_title")}
+
               >
                 {featuresSection.title}
               </h2>
               {featuresSection.subtitle && (
                 <p 
                   className="mt-4 text-stone-500"
-                  {...getEditableProps("home_page", "bltd30052da58732341", "features_section_subtitle")}
+
                 >
                   {featuresSection.subtitle}
                 </p>
@@ -688,7 +687,7 @@ function HomeContentInner({
               <div className="relative">
                 <h2 
                   className="text-3xl font-bold text-white sm:text-4xl animate-slide-up"
-                  {...getEditableProps("home_page", "bltd30052da58732341", "cta_headline")}
+
                 >
                   {ctaSection.headline}
                 </h2>
@@ -696,7 +695,7 @@ function HomeContentInner({
                   <p 
                     className="mx-auto mt-4 max-w-xl text-lg text-amber-100 animate-slide-up opacity-0 delay-100"
                     style={{ animationFillMode: 'forwards' }}
-                    {...getEditableProps("home_page", "bltd30052da58732341", "cta_description")}
+
                   >
                     {ctaSection.description}
                   </p>

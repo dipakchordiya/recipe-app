@@ -100,8 +100,8 @@ export function RecipeCard({ recipe, onLike, onSave }: RecipeCardProps) {
             <button
               onClick={handleSaveClick}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110",
-                recipe.is_saved && "bg-amber-500 text-white hover:bg-amber-600"
+                "flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white transition-all hover:bg-black/60 hover:scale-110",
+                recipe.is_saved && "bg-amber-500 hover:bg-amber-600"
               )}
             >
               <Bookmark
@@ -111,8 +111,8 @@ export function RecipeCard({ recipe, onLike, onSave }: RecipeCardProps) {
             <button
               onClick={handleLikeClick}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-all hover:bg-white hover:scale-110",
-                recipe.is_liked && "bg-red-500 text-white hover:bg-red-600"
+                "flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white transition-all hover:bg-black/60 hover:scale-110",
+                recipe.is_liked && "bg-red-500 hover:bg-red-600"
               )}
             >
               <Heart
@@ -124,7 +124,7 @@ export function RecipeCard({ recipe, onLike, onSave }: RecipeCardProps) {
           {/* Category Badge */}
           {recipe.category && (
             <div className="absolute left-3 top-3">
-              <Badge variant="default" className="bg-white/90 backdrop-blur-sm text-stone-700">
+              <Badge variant="default" className="bg-black/40 backdrop-blur-md text-white border-0">
                 {recipe.category}
               </Badge>
             </div>
