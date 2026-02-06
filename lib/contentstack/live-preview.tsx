@@ -50,7 +50,7 @@ export function useLivePreviewUpdate<T>(
     handleChange();
 
     return () => {
-      if (typeof unsubscribe === "function") {
+      if (unsubscribe) {
         unsubscribe();
       }
     };

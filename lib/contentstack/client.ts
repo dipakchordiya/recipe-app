@@ -81,9 +81,12 @@ export function initLivePreview() {
 }
 
 // Subscribe to live preview changes
-export function onLivePreviewChange(callback: () => void): void {
-  if (typeof window === "undefined") return;
-  ContentstackLivePreview.onEntryChange(callback);
+export function onLivePreviewChange(callback: () => void): (() => void) | undefined {
+  if (typeof window === "undefined") return undefined;
+  
+  // onEntryChange may return an unsubscribe function
+  const result = ContentstackLivePreview.onEntryChange(callback);
+  return typeof result === "function" ? result : undefined;
 }
 
 // Get live preview hash from URL
