@@ -265,12 +265,46 @@ function HomeContentInner({
   const categories = filteredCategories;
 
   // Map categories for display - show recipe counts based on ALL recipes (not filtered)
+  // Use flexible matching to handle duplicates like "Salad"/"Salads", "Soup"/"Soups"
   const displayCategories = categories.length > 0
-    ? categories.map((cat) => ({
-        name: cat.name,
-        emoji: cat.emoji || "🍽️",
-        count: initialRecipes.filter((r) => r.category === cat.name).length,
-      }))
+    ? categories.map((cat) => {
+        const catNameLower = cat.name.toLowerCase();
+        const count = initialRecipes.filter((r) => {
+          if (!r.category) return false;
+          const recipeCatLower = r.category.toLowerCase();
+          // Exact match or plural/singular match
+          return recipeCatLower === catNameLower || 
+                 recipeCatLower === catNameLower + 's' ||
+                 recipeCatLower + 's' === catNameLower ||
+                 recipeCatLower.includes(catNameLower) ||
+                 catNameLower.includes(recipeCatLower);
+        }).length;
+        return {
+          name: cat.name,
+          emoji: cat.emoji || "🍽️",
+          count,
+        };
+      })
+      // Filter out categories with 0 recipes and remove duplicates (keep ones with recipes)
+      .filter((cat, index, arr) => {
+        if (cat.count === 0) return false;
+        // Check for duplicates (e.g., "Salad" and "Salads")
+        const isDuplicate = arr.findIndex((c, i) => 
+          i !== index && 
+          (c.name.toLowerCase().includes(cat.name.toLowerCase()) || 
+           cat.name.toLowerCase().includes(c.name.toLowerCase()))
+        ) !== -1;
+        if (isDuplicate) {
+          // Keep the one with more recipes
+          const duplicate = arr.find((c, i) => 
+            i !== index && 
+            (c.name.toLowerCase().includes(cat.name.toLowerCase()) || 
+             cat.name.toLowerCase().includes(c.name.toLowerCase()))
+          );
+          return !duplicate || cat.count >= duplicate.count;
+        }
+        return true;
+      })
     : [];
 
   // Use Contentstack data or fallbacks
