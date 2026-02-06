@@ -264,12 +264,12 @@ function HomeContentInner({
 
   const categories = filteredCategories;
 
-  // Map categories for display - show recipe counts based on filtered recipes
+  // Map categories for display - show recipe counts based on ALL recipes (not filtered)
   const displayCategories = categories.length > 0
     ? categories.map((cat) => ({
         name: cat.name,
         emoji: cat.emoji || "🍽️",
-        count: filteredRecipes.filter((r) => r.category === cat.name).length,
+        count: initialRecipes.filter((r) => r.category === cat.name).length,
       }))
     : [];
 
