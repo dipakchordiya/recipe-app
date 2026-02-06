@@ -18,18 +18,16 @@ import type { RecipeWithAuthor } from "@/types/database";
 
 const categories = [
   "All",
+  "Indian Cuisine",
+  "American Cuisine",
+  "Italian",
+  "Mexican",
+  "Desserts",
+  "Salads",
+  "Soups",
   "Breakfast",
-  "Lunch",
-  "Dinner",
-  "Dessert",
-  "Snack",
-  "Appetizer",
-  "Soup",
-  "Salad",
-  "Main Course",
-  "Side Dish",
-  "Beverage",
-  "Baking",
+  "Seafood",
+  "Appetizers",
 ];
 
 const difficulties = ["All", "easy", "medium", "hard"];

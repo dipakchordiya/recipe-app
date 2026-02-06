@@ -79,6 +79,7 @@ export async function getAllRecipes(): Promise<Recipe[]> {
     const Stack = await getStack();
     const query = Stack.ContentType(CONTENT_TYPES.RECIPE).Query();
     const result = await query
+      .limit(100) // Ensure we fetch all recipes
       .includeReference(["author", "category"])
       .toJSON()
       .find();
@@ -96,7 +97,7 @@ export async function getPublishedRecipes(): Promise<Recipe[]> {
     const Stack = await getStack();
     const query = Stack.ContentType(CONTENT_TYPES.RECIPE).Query();
     const result = await query
-      .where("is_published", true)
+      .limit(100) // Ensure we fetch all recipes
       .includeReference(["author", "category"])
       .toJSON()
       .find();
@@ -130,6 +131,7 @@ export async function getRecipesByCategory(categoryName: string): Promise<Recipe
     const Stack = await getStack();
     const query = Stack.ContentType(CONTENT_TYPES.RECIPE).Query();
     const result = await query
+      .limit(100)
       .includeReference(["author", "category"])
       .toJSON()
       .find();
@@ -149,6 +151,7 @@ export async function searchRecipes(searchTerm: string): Promise<Recipe[]> {
     const Stack = await getStack();
     const query = Stack.ContentType(CONTENT_TYPES.RECIPE).Query();
     const result = await query
+      .limit(100)
       .regex("title", searchTerm, "i")
       .includeReference(["author", "category"])
       .toJSON()
@@ -169,7 +172,7 @@ export async function getIndianRecipes(): Promise<Recipe[]> {
     const Stack = await getStack();
     const query = Stack.ContentType(CONTENT_TYPES.RECIPE).Query();
     const result = await query
-      .where("is_published", true)
+      .limit(100)
       .includeReference(["author", "category"])
       .toJSON()
       .find();
@@ -192,7 +195,7 @@ export async function getAmericanRecipes(): Promise<Recipe[]> {
     const Stack = await getStack();
     const query = Stack.ContentType(CONTENT_TYPES.RECIPE).Query();
     const result = await query
-      .where("is_published", true)
+      .limit(100)
       .includeReference(["author", "category"])
       .toJSON()
       .find();
